@@ -6,7 +6,7 @@
 
 ---
 
-## ![](https://app.devin.ai/attachments/ffe90d9f-9908-489e-a5c1-59a1f3dad599/alert-24.svg) Veredicto
+## ![](img/icons/alert-24.svg) Veredicto
 
 Sí, se bypassea. Lo comprobamos en una VM real.
 
@@ -16,7 +16,7 @@ Corrimos el equivalente del cheat dentro de `rundll32.exe`, un proceso firmado p
 
 ---
 
-## ![](https://app.devin.ai/attachments/be30bda7-5914-4286-b28e-4fa9eee58ebe/book-24.svg) 1. Qué es el antifake de USSL
+## ![](img/icons/book-24.svg) 1. Qué es el antifake de USSL
 
 La liga corre una revisión rápida antes y después de cada oficial de Roblox. El staff le pide al jugador esto:
 
@@ -32,7 +32,7 @@ Para el que no sabe: un proceso es cada programa corriendo, como `chrome.exe` o 
 
 ---
 
-## ![](https://app.devin.ai/attachments/a5915cf9-f1f5-4246-8216-b3236ee5f20f/unlock-24.svg) 2. Cómo se bypassea
+## ![](img/icons/unlock-24.svg) 2. Cómo se bypassea
 
 ### El error de fondo: mirar procesos, no módulos
 
@@ -44,7 +44,7 @@ La segunda es una DLL cargada dentro de un proceso legítimo. Eso no aparece en 
 
 Lo mismo con el Task Manager y la bandeja. Muestran procesos y apps con ventana o ícono, no las DLLs que cada uno lleva adentro.
 
-![El cheat vive dentro del proceso](https://app.devin.ai/attachments/baf39f6f-fe3a-4230-bc6c-0b5e0e41404d/dentro-del-proceso.svg)
+![El cheat vive dentro del proceso](img/dentro-del-proceso.svg)
 
 ### El método probado: rundll32, el LOLBin clásico
 
@@ -56,7 +56,7 @@ rundll32.exe C:\cualquier\ruta\CheatCore.dll,EntryPoint
 
 En tasklist aparece `rundll32.exe`. Nombre de Windows, firma de Microsoft, nada raro. La DLL del cheat vive adentro, invisible para el check.
 
-![Flujo del bypass](https://app.devin.ai/attachments/80845d34-0ced-4072-84bb-ed422a37c0d1/flujo-bypass.svg)
+![Flujo del bypass](img/flujo-bypass.svg)
 
 ### La variante más barata: renombrar el ejecutable
 
@@ -68,7 +68,7 @@ El procedimiento completo está publicado. El jugador sabe qué van a mirar y cu
 
 ---
 
-## ![](https://app.devin.ai/attachments/8d14af0e-e7c7-432b-9cdc-87747cada6f3/beaker-24.svg) 3. La prueba real en Windows
+## ![](img/icons/beaker-24.svg) 3. La prueba real en Windows
 
 Lo montamos en la VM. Como cheat usamos una copia de `shell32.dll` renombrada a `CheatCore.dll`. Bytes idénticos al original, firma de Microsoft válida. El contenido no importa para la demo. Lo que importa es dónde vive.
 
@@ -160,7 +160,7 @@ También se cargó una DLL .NET de prueba. Resultado: `tasklist /m` ni siquiera 
 
 ---
 
-## ![](https://app.devin.ai/attachments/741ed9ce-d656-4dbb-b874-9bc0da21ae7d/shield-check-24.svg) 4. El fix para el staff
+## ![](img/icons/shield-check-24.svg) 4. El fix para el staff
 
 Si la liga quiere un check que de verdad complique al cheater, esto es lo mínimo. Todo es read-only, no toca nada:
 
@@ -194,7 +194,7 @@ Tres cambios de fondo además de los comandos:
 
 ---
 
-## ![](https://app.devin.ai/attachments/c1eaa700-0eb2-46d5-a8cf-b3909ab60768/eye-24.svg) 5. Crítica al antifake de USSL
+## ![](img/icons/eye-24.svg) 5. Crítica al antifake de USSL
 
 ### Mide procesos, no código
 
@@ -212,13 +212,13 @@ El jugador conoce el guion completo por adelantado: qué abrir, qué mostrar, qu
 
 Un screenshot se produce después de ordenar el estado. Y hay cheats que nunca generan algo visible en esa lista: macros en el firmware del mouse, autoclickers del software del fabricante como Razer Synapse o Logitech G-Hub, o código corriendo en otra PC.
 
-![Check debil vs check fuerte](https://app.devin.ai/attachments/b3508520-0219-4624-a10f-887998e720f9/debil-vs-fuerte.svg)
+![Check debil vs check fuerte](img/debil-vs-fuerte.svg)
 
 Veredicto final: el antifake es cosmético. Sirve para que el staff parezca que revisa y para cachar al jugador que deja su `cheat.exe` abierto en la bandeja. Contra alguien que sabe lo que hace, `tasklist /fo table` es decoración. La versión que de verdad complica mira módulos, líneas de comando, rutas, firmas e historial. Todo eso está en `detect.ps1`.
 
 ---
 
-## ![](https://app.devin.ai/attachments/14fb60f1-2bfe-4513-80df-74a09b75926a/person-24.svg) Contacto
+## ![](img/icons/person-24.svg) Contacto
 
 [![Discord Presence](https://lanyard.cnrad.dev/api/1038423018139037738)](https://discord.com/users/1038423018139037738)
 
