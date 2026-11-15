@@ -1,239 +1,225 @@
-# Check de servicios en una SS: es bypasseable, probado
+# El antifake de USSL se bypassea. Probado en Windows real.
 
-> Qué chequea el staff, cómo se bypassea en 2 segundos, qué se probó en una máquina Windows real y por qué el método es débil.
-> Probado el **2026-11-13** en una VM de **Windows Server 2022 (10.0.20348)** con PowerShell como administrador.
-
----
-
-## Veredicto
-
-**Sí, se bypassea. Lo comprobamos en una VM real.** El check mira cómo están los servicios *en este instante* y nada más. El cheater hace su desastre, corre literalmente el mismo script de "arreglo" que usa el staff, y el check sale en verde. Tarda segundos.
-
-Y no solo es bypasseable: **también marca inocentes**. En la VM limpia, sin tocar nada, 5 de los 8 servicios ya venían `Stopped/Disabled` de fábrica. Con la regla "Stopped = flag", esa PC inocente ya estaría funada.
-
-O sea el método falla para los dos lados: al cheater no lo cacha y al jugador con debloat normal lo acusa.
+> Qué chequea el staff antes de un oficial, cómo se pasa el check completo, qué se midió en una máquina real y por qué el método es débil.
+>
+> Probado el **2026-11-15** en una VM de **Windows Server 2022 (10.0.20348)**.
 
 ---
 
-## 1. ¿De qué habla este documento?
+## ![](https://app.devin.ai/attachments/ffe90d9f-9908-489e-a5c1-59a1f3dad599/alert-24.svg) Veredicto
 
-En una **SS (screenshare)** el staff revisa la PC de un jugador buscando señales de que borró evidencias antes de la revisión. Uno de los checks más comunes es mirar el estado de ciertos **servicios de Windows**.
+Sí, se bypassea. Lo comprobamos en una VM real.
 
-Un **servicio** es un programa que corre en segundo plano sin ventana. Varios servicios de Windows se encargan de *registrar lo que pasa en la PC*: qué programas se abrieron, cuándo falló algo, qué hizo el sistema. Si un jugador los apaga, Windows deja de registrar — y puede borrar rastros sin que se generen nuevos.
+El antifake entero se resume en una idea: si la lista de procesos y la pantalla no muestran nada raro, la PC está limpia. El problema es que un cheat no necesita ser un proceso propio. Puede vivir dentro de un proceso legítimo de Windows, y ni `tasklist`, ni el Task Manager, ni la captura de pantalla lo ven.
 
-La regla del check es simple:
-
-> **Si alguno de estos servicios aparece como `Stopped` durante la SS → se considera "logs detenidos" (sospechoso).**
-
-Los servicios vigilados:
-
-| Servicio | Nombre real | Qué registra |
-|---|---|---|
-| `EventLog` | Windows Event Log | **Todos** los eventos del sistema (el más importante) |
-| `SysMain` | SysMain (antes Superfetch) | Genera los archivos **prefetch** (qué .exe se ejecutó y cuándo) |
-| `DiagTrack` | Connected User Experiences | Telemetría / diagnósticos de uso |
-| `PcaSvc` | Program Compatibility Assistant | Qué programas se ejecutaron (lista PCA) |
-| `WerSvc` | Windows Error Reporting | Reportes de crash de programas |
-| `DPS` | Diagnostic Policy Service | Diagnósticos del sistema |
-| `EventSystem` | COM+ Event System | Distribución de eventos entre programas |
-| `Schedule` | Task Scheduler | Qué tareas programadas corrieron |
-
-El check que usa el staff:
-
-```powershell
-Get-Service DiagTrack,PcaSvc,DPS,SysMain,EventLog,WerSvc,EventSystem,Schedule -ErrorAction SilentlyContinue | ft Name,Status,StartType -AutoSize
-```
-
-Y si algo está detenido, lo "arreglan" con un script que pone cada servicio en `Automatic` (o `Manual` para WerSvc) y lo arranca.
+Corrimos el equivalente del cheat dentro de `rundll32.exe`, un proceso firmado por Microsoft. En `tasklist /fo table`, el comando exacto que pide el staff, solo aparece `rundll32.exe`. Nombre normal, firma válida, cero banderas. El check pasa en verde con el módulo activo adentro.
 
 ---
 
-## 2. Cómo es el bypass
+## ![](https://app.devin.ai/attachments/be30bda7-5914-4286-b28e-4fa9eee58ebe/book-24.svg) 1. Qué es el antifake de USSL
 
-El check mira **cómo están los servicios AHORA MISMO**. No mira el pasado. Ese es todo el problema.
+La liga corre una revisión rápida antes y después de cada oficial de Roblox. El staff le pide al jugador esto:
 
-Entonces el bypass es: **hacer el daño primero, dejar todo bonito después**.
+1. **SHIFT+F5** dentro del juego para mostrar los FPS, con Roblox en ventana chica.
+2. **CTRL+SHIFT+ESC** para abrir el Task Manager y mostrar las apps en segundo plano.
+3. **WIN+R** y pegar `%localappdata%\Roblox\GlobalBasicSettings_13.xml` para abrir la carpeta de Roblox.
+4. Abrir `cmd` y correr `tasklist /fo table` para listar toda la actividad de la PC.
+5. Tomar una captura completa con Discord, Roblox, la carpeta y los íconos ocultos de la bandeja visibles, y mandarla al canal del staff.
 
-```mermaid
-flowchart TD
-    A[Jugador quiere borrar rastros] --> B[Detiene SysMain, DiagTrack, PcaSvc...]
-    B --> C[Con los servicios muertos, borra prefetch, PCA, WER, telemetría]
-    C --> D[Opcional: limpia logs con wevtutil cl — no requiere detener nada]
-    D --> E[Corre el MISMO script del staff: StartType Automatic + Start-Service]
-    E --> F[Abre la screenshare]
-    F --> G{Staff corre el check}
-    G --> H[Todo Running/Automatic — el check pasa]
-```
+Regla extra: el jugador no puede salir del juego durante la revisión. Si rejoin, repite todo el procedimiento con un staff mirando.
 
-Lo más cómico del método: **el script de "reparación" del staff ES el bypass**. Se lo están dando servido al cheater — cualquiera que haya leído el procedimiento sabe exactamente qué tiene que correr antes de la SS para quedar limpio.
-
-Un cheater más cuidadoso ni siquiera detiene EventLog — para borrar eventos sueltos o logs enteros basta `wevtutil cl <log>`, que funciona con el servicio corriendo.
+Para el que no sabe: un proceso es cada programa corriendo, como `chrome.exe` o `Discord.exe`. La idea del staff es que si el cheat corre, debería verse en la lista. El error técnico es que un cheat no tiene por qué ser un proceso propio.
 
 ---
 
-## 3. La prueba real en Windows
+## ![](https://app.devin.ai/attachments/a5915cf9-f1f5-4246-8216-b3236ee5f20f/unlock-24.svg) 2. Cómo se bypassea
 
-Lo probamos en una VM de Windows limpia. Esto fue lo que pasó, en orden:
+### El error de fondo: mirar procesos, no módulos
 
-### 3.1 Primera sorpresa: una PC limpia ya "falla" el check
+Un cheat puede existir de dos formas.
 
-Sin tocar absolutamente nada, el check mostró esto:
+La primera es un `.exe` propio. Eso es lo que el staff espera ver, y aparece en tasklist.
+
+La segunda es una DLL cargada dentro de un proceso legítimo. Eso no aparece en tasklist. El comando lista procesos, no los módulos que cada proceso cargó. Es así como funcionan los executors de Roblox de verdad: inyectan su código dentro de `RobloxPlayerBeta.exe` o de un proceso de Windows.
+
+Lo mismo con el Task Manager y la bandeja. Muestran procesos y apps con ventana o ícono, no las DLLs que cada uno lleva adentro.
+
+![El cheat vive dentro del proceso](https://app.devin.ai/attachments/baf39f6f-fe3a-4230-bc6c-0b5e0e41404d/dentro-del-proceso.svg)
+
+### El método probado: rundll32, el LOLBin clásico
+
+Windows trae `rundll32.exe`, un binario firmado por Microsoft cuyo único trabajo es cargar una DLL y ejecutar una función de ella. Es la técnica favorita para correr código sin proceso propio:
 
 ```text
-Name         Status StartType
-----         ------ ---------
-DiagTrack   Stopped  Disabled
-DPS         Stopped  Disabled
-EventLog    Running Automatic
-EventSystem Running Automatic
-PcaSvc      Stopped  Disabled
-Schedule    Running Automatic
-SysMain     Stopped  Disabled
-WerSvc      Stopped  Disabled
+rundll32.exe C:\cualquier\ruta\CheatCore.dll,EntryPoint
 ```
 
-**5 de 8 servicios ya venían Stopped/Disabled** en un Windows recién instalado. Con la regla "Stopped = flag", esta PC limpia ya saldría marcada.
+En tasklist aparece `rundll32.exe`. Nombre de Windows, firma de Microsoft, nada raro. La DLL del cheat vive adentro, invisible para el check.
 
-### 3.2 El ciclo del bypass, medido en tiempo real
+![Flujo del bypass](https://app.devin.ai/attachments/80845d34-0ced-4072-84bb-ed422a37c0d1/flujo-bypass.svg)
 
-Se tomó **SysMain** como ejemplo. Se intentó primero con EventSystem, pero Windows se negó a detenerlo sin `-Force` porque tiene el servicio SENS dependiendo de él (dato útil: no todos los servicios se pueden apagar gratis).
+### La variante más barata: renombrar el ejecutable
 
-La secuencia completa duró **~2 segundos**:
+Un `.exe` llamado `RuntimeBroker.exe` o `svchost.exe` también se ve normal en la lista. En la sección 3.4 está cómo se detecta igual: el nombre es lo único que copiaron. La ruta, los metadatos y la firma no mienten.
 
-```mermaid
-sequenceDiagram
-    participant C as Cheater/Script
-    participant W as Windows
-    participant L as System Log
-    C->>W: Set-Service SysMain Automatic + Start
-    W->>L: Evento 7040 (config) + 7036 (running)
-    C->>W: Stop-Service SysMain
-    W->>L: Evento 7036 (stopped) — el "flag" del check
-    C->>W: Script del staff: Automatic + Start
-    W->>L: Evento 7036 (running)
-    Note over L: El check ve "Running"<br/>pero el log guardó TODO el ciclo
-```
+### La variante que no necesita nada corriendo
 
-Output real del check en cada momento (fila SysMain):
+El procedimiento completo está publicado. El jugador sabe qué van a mirar y cuándo. Entonces la secuencia más simple es descargar el cheat antes del oficial, jugar, cerrarlo justo antes de la revisión y tomar la captura limpio. La regla de "no puedes salir del juego" no impide haber cargado el cheat antes de entrar.
 
-| Momento | Fila de SysMain en el check | ¿El check la marca? |
-|---|---|---|
-| Antes del ciclo | `Running Automatic` | No |
-| Tras `Stop-Service` | `Stopped Automatic` | **Sí — flag** |
-| Tras restauración staff | `Running Automatic` | No — **verde otra vez** |
+---
 
-**Confirmado: el check pasa después de haber tocado el servicio.**
+## ![](https://app.devin.ai/attachments/8d14af0e-e7c7-432b-9cdc-87747cada6f3/beaker-24.svg) 3. La prueba real en Windows
 
-### 3.3 El rastro que quedó
+Lo montamos en la VM. Como cheat usamos una copia de `shell32.dll` renombrada a `CheatCore.dll`. Bytes idénticos al original, firma de Microsoft válida. El contenido no importa para la demo. Lo que importa es dónde vive.
 
-Mientras el check veía "Running", el System log guardó **6 eventos nuevos** del experimento (RecordIds 2861–2866):
+### 3.1 El bypass corriendo
 
 ```text
-13:56:13  2861  7040  Start type de SysMain: disabled -> auto start
-13:56:13  2862  7036  SysMain entered the running state
-13:56:13  2863  7036  SysMain entered the stopped state     <- el stop
-13:56:14  2864  7036  SysMain entered the running state     <- el restore
-13:56:14  2865  7036  SysMain entered the stopped state
-13:56:14  2866  7040  Start type de SysMain: auto start -> disabled
+"C:\Windows\System32\rundll32.exe" C:\antifake-poc\CheatCore.dll,OpenAs_RunDLL ...
 ```
 
-Y el dato más lindo: el proceso del servicio reiniciado arrancó **79.24 minutos después de que la PC se encendió**. O sea, el servicio "nació" hace un minuto, no con la PC — imposible de ocultar sin reiniciar la máquina entera.
+`rundll32.exe` con PID 5652 quedó vivo con `CheatCore.dll` mapeada dentro.
+
+Detalle honesto: la primera variante probada, `Control_RunDLL`, cargó la DLL pero el proceso murió al instante. La técnica necesita un punto de entrada que mantenga vivo al proceso. Con `OpenAs_RunDLL`, que abre un diálogo bloqueante, quedó corriendo.
+
+### 3.2 Lo que ve el staff: `tasklist /fo table`
+
+Output real mientras el cheat estaba activo. Extracto del listado completo de unos 140 procesos:
+
+```text
+Image Name                     PID Session Name        Session#    Mem Usage
+========================= ======== ================ =========== ============
+RuntimeBroker.exe             4864 Console                    1     14,524 K
+RuntimeBroker.exe             3576 Console                    1     22,700 K
+RuntimeBroker.exe             5528 Console                    1     15,056 K
+chrome.exe                    3888 Console                    1     71,192 K
+powershell.exe                6248 Console                    1    101,196 K
+rundll32.exe                  5652 Console                    1     12,060 K   <- el cheat vive aqui
+OpenWith.exe                  2832 Console                    1     35,416 K
+tasklist.exe                  9060 Console                    1      8,968 K
+```
+
+Una fila `rundll32.exe`, nombre firmado por Microsoft. En el tasklist de un jugador esa línea no levanta ni una ceja. Check pasado.
+
+### 3.3 Lo que ve el staff que sabe revisar
+
+Tres comandos. Los tres lo cachan al instante.
+
+Primero, el inventario de módulos:
+
+```text
+> tasklist /m CheatCore.dll
+
+Image Name                     PID Modules
+========================= ======== ============================================
+rundll32.exe                  5652 CheatCore.dll
+```
+
+Segundo, la línea de comandos completa del proceso:
+
+```text
+> Get-CimInstance Win32_Process -Filter "Name='rundll32.exe'" | Select ProcessId,CommandLine
+
+ProcessId CommandLine
+--------- -----------
+     5652 "C:\Windows\System32\rundll32.exe" C:\antifake-poc\CheatCore.dll,OpenAs_RunDLL ...
+```
+
+Ahí está escrito literalmente qué DLL cargó. Un rundll32 cargando algo fuera de `C:\Windows` es para investigar.
+
+Tercero, los módulos cargados desde rutas raras:
+
+```text
+> Get-Process rundll32 | Select -Expand Modules | ? {$_.FileName -notlike 'C:\Windows\*'}
+
+ModuleName    FileName
+----------    --------
+CheatCore.dll C:\antifake-poc\CheatCore.dll
+```
+
+### 3.4 La trampa del renombrado, también probada
+
+Se copió el ejecutable de prueba con el nombre neutro `IdentitySample.exe` y se corrió. En tasklist solo se ve un nombre más. Pero sin abrir nada ya delata tres cosas:
+
+- El metadato `OriginalFilename` seguía diciendo `ModuleHost.exe`. Renombrar el archivo no edita sus metadatos.
+- Corría desde `C:\antifake-poc\`, no desde `C:\Windows\System32`.
+- Firma `NotSigned`. Los RuntimeBroker reales de la misma VM viven todos en System32 con firma `Valid`:
+
+```text
+> Get-Process RuntimeBroker | Select Name,Path
+RuntimeBroker C:\Windows\System32\RuntimeBroker.exe
+RuntimeBroker C:\Windows\System32\RuntimeBroker.exe
+RuntimeBroker C:\Windows\System32\RuntimeBroker.exe
+```
+
+Un "RuntimeBroker" corriendo desde otra carpeta y sin firma no es RuntimeBroker.
+
+### 3.5 El dato que empeora todo para el staff
+
+También se cargó una DLL .NET de prueba. Resultado: `tasklist /m` ni siquiera la lista. Las APIs nativas de inventario no ven assemblies administrados. Un cheat escrito en .NET dentro de un proceso no aparece ni en la lista de procesos ni en la lista básica de módulos. Para verlo hacen falta herramientas CLR de verdad, muy por encima de un `tasklist`.
 
 ---
 
-## 4. Qué rastro deja un bypass real (cómo sí se detecta)
+## ![](https://app.devin.ai/attachments/741ed9ce-d656-4dbb-b874-9bc0da21ae7d/shield-check-24.svg) 4. El fix para el staff
 
-Aunque el check de estado salga en verde, el bypass deja huellas en varios lados:
-
-| Señal | Qué buscar | Por qué delata |
-|---|---|---|
-| **Eventos 7036** | Stops/starts recientes de estos servicios en el System log | Cada `Stop-Service`/`Start-Service` queda grabado |
-| **Eventos 7040** | Cambios de StartType (Disabled→Automatic etc.) | El "arreglo" del cheater también queda grabado |
-| **Process StartTime vs boot** | El proceso del servicio arrancó mucho después del encendido | EventLog reiniciado hace 5 min con PC prendida hace 3h = lo reiniciaron |
-| **Continuidad de logs** | El evento MÁS VIEJO de cada log vs `LastBootUpTime` | Un log cuyo evento más antiguo es de hace 2 minutos fue limpiado |
-| **Eventos 1102 / 104** | "Log cleared" en Security / System | Marca directa de `wevtutil cl` |
-| **Prefetch** | Cantidad de `.pf` y sus fechas | Prefetch vacío o todo "de hoy" tras horas de uso = borrado o SysMain apagado |
-| **USN Journal / artifacts** | Cambios en archivos del sistema | Delata deletions aunque los logs se limpien |
-
-Comandos clave (todo read-only, no toca nada):
+Si la liga quiere un check que de verdad complique al cheater, esto es lo mínimo. Todo es read-only, no toca nada:
 
 ```powershell
-# Stops/starts y cambios de StartType recientes
-Get-WinEvent -FilterHashtable @{LogName='System'; Id=7036,7040} -MaxEvents 60
+# Modulos cargados por proceso. El cheat como DLL aparece aqui.
+tasklist /m
+tasklist /m <nombre-sospechoso>.dll
 
-# ¿Desde cuándo existe el log? (continuidad)
-Get-WinEvent -LogName System -Oldest -MaxEvents 1
-Get-WinEvent -LogName Application -Oldest -MaxEvents 1
+# Lineas de comando completas. Delata rundll32, regsvr32 y powershell raros.
+Get-CimInstance Win32_Process | Select Name,ProcessId,CommandLine | Format-List
 
-# ¿Cuándo arrancó el proceso de cada servicio?
-Get-CimInstance Win32_Service -Filter "Name='EventLog'" | % { (Get-Process -Id $_.ProcessId).StartTime }
-(Get-CimInstance Win32_OperatingSystem).LastBootUpTime
+# Modulos cargados desde fuera de C:\Windows
+Get-Process | Select -Expand Modules | ? {$_.FileName -notlike 'C:\Windows\*'}
 
-# Prefetch: ¿cuántos .pf y de qué fecha?
-Get-ChildItem C:\Windows\Prefetch\*.pf | Measure-Object
-Get-ChildItem C:\Windows\Prefetch\*.pf | Sort LastWriteTime | Select -First 1 -Expand LastWriteTime
+# Procesos con nombre de sistema pero ruta rara
+Get-Process | Select Name,Path | ? {$_.Path -notlike 'C:\Windows\*'}
+
+# Firma y metadatos del ejecutable
+Get-AuthenticodeSignature <ruta>
+(Get-Item <ruta>).VersionInfo.OriginalFilename
+
+# Lo que corrio HOY aunque ya no este corriendo
+Get-ChildItem C:\Windows\Prefetch\*.pf | Sort LastWriteTime -Desc | Select -First 30
 ```
 
-El script completo que recolecta todo esto es **`detect.ps1`**.
+Tres cambios de fondo además de los comandos:
+
+- Mirar dentro de `RobloxPlayerBeta.exe`, no solo que existe. Process Explorer de Sysinternals muestra las DLLs del proceso.
+- Screenshare en vivo en vez de captura estática. Una foto se toma después de limpiar. Un video en vivo se ve mientras pasa.
+- Historial en vez de presente. Prefetch, descargas recientes y USN journal dicen qué se ejecutó hoy y a qué hora, no solo qué corre ahora.
 
 ---
 
-## 5. El otro problema: falsos positivos
+## ![](https://app.devin.ai/attachments/c1eaa700-0eb2-46d5-a8cf-b3909ab60768/eye-24.svg) 5. Crítica al antifake de USSL
 
-El check no solo se bypassea — también **marca gente inocente**:
+### Mide procesos, no código
 
-- En la VM limpia, **5/8 servicios ya venían Stopped/Disabled** de fábrica.
-- **DiagTrack** lo deshabilitan miles de "debloat scripts" de privacidad que la gente corre por costumbre, no por chetos.
-- **SysMain** lo apaga gente para mejorar rendimiento.
-- Varios servicios son **trigger-start**: arrancan solo cuando se necesitan y se detienen solos. `Stopped` es su estado normal. Para saberlo: `sc.exe qtriggerinfo <servicio>` — si tiene triggers, Stopped puede ser legítimo.
-- **WerSvc** queda en `Manual` incluso después del script del staff — "todo Running/Automatic" ni siquiera es el estado correcto esperado.
+La premisa del check es "cheat = proceso visible". Los cheats serios hace años viven como DLL dentro de procesos legítimos. Lo demostramos metiendo `CheatCore.dll` dentro de `rundll32.exe`, el nombre más limpio que existe en Windows. `tasklist` está diseñado para no mostrar eso.
 
-Tabla veredicto por servicio (observado en la prueba):
+### Es un ritual de apariencias
 
-| Servicio | ¿Stopped es normal? | ¿Qué hace pararlo? | Residuo si lo tocan |
-|---|---|---|---|
-| EventLog | Casi nunca — debería estar siempre Running | Apaga TODO el registro de eventos | 7036/7040 + restart del proceso + gaps de log |
-| SysMain | Puede estar Disabled por debloat | Deja de generar prefetch | 7036/7040 + prefetch vacío/con fecha de hoy |
-| DiagTrack | Muy común Disabled (debloat) | Sin telemetría nueva | 7040 (cambio de StartType) |
-| PcaSvc | Trigger-start, Stopped es normal | Sin lista de programas ejecutados | 7036 + archivos PCA ausentes/vacíos |
-| WerSvc | Trigger-start/Manual, Stopped es normal | Sin reportes de crash nuevos | 7036 + WER vacío |
-| DPS | Depende de la config | Sin diagnósticos | 7036/7040 |
-| EventSystem | Difícil de parar (SENS depende) | — | 7036 + cascada de dependents |
-| Schedule | Casi nunca | Sin tareas programadas | 7036 |
+Carpeta de Roblox abierta, íconos de bandeja, ventana chica, captura bonita. Todo eso mide qué tan ordenado dejó el escritorio el jugador. No mide qué corre en la PC. Un cheat bien hecho ni siquiera toca la carpeta de Roblox.
 
----
+### Es estático y está avisado
 
-## 6. Crítica al método de SS
+El jugador conoce el guion completo por adelantado: qué abrir, qué mostrar, qué capturar. Preparar una PC que pase es seguir el mismo guion pero limpiando antes. La regla de no salir del juego cierra solo la vía más tonta. No cierra la carga previa del cheat, el cheat en DLL ni el cheat externo.
 
-El check tal como está diseñado tiene tres errores de fondo:
+### Una captura no prueba nada
 
-**1. Mira el presente, no el pasado.** `Get-Service` dice cómo está el servicio *ahora*. Un "Running" no prueba que nunca lo detuvieron, igual que un "Stopped" no prueba que lo detuvo el jugador. Es la diferencia entre preguntar "¿está la luz prendida?" y "¿quién tocó el switch hoy?". El check pregunta lo primero.
+Un screenshot se produce después de ordenar el estado. Y hay cheats que nunca generan algo visible en esa lista: macros en el firmware del mouse, autoclickers del software del fabricante como Razer Synapse o Logitech G-Hub, o código corriendo en otra PC.
 
-**2. Regala la solución al cheater.** Publicar el script de reparación como parte del procedimiento le dice al cheater exactamente qué correr antes de la SS. El antídoto y el bypass son el mismo script.
+![Check debil vs check fuerte](https://app.devin.ai/attachments/b3508520-0219-4624-a10f-887998e720f9/debil-vs-fuerte.svg)
 
-**3. Confunde estado anormal con malicia.** DiagTrack Disabled es el resultado más común de cualquier debloat de Windows. PcaSvc y WerSvc están Stopped en PCs perfectamente normales porque son trigger-start. La regla "Stopped = flag" tiene una tasa de falsos positivos brutal — lo vimos: una VM virgen ya fallaba el check en 5 servicios.
-
-La versión fuerte del check no mira el estado — mira el historial:
-
-```mermaid
-flowchart LR
-    A[Check actual:<br/>estado de servicios] -.debil.-> B[cheater: restaurar<br/>antes del SS]
-    C[Check fuerte:<br/>7036/7040 + process time<br/>+ continuidad de logs + prefetch] --> D[el historial no se puede<br/>des-decir]
-```
-
-1. `7036`/`7040` recientes → ¿se tocaron servicios hoy?
-2. Process start vs boot → ¿se reiniciaron "hace nada"?
-3. Evento más viejo del log vs boot → ¿se limpió el log?
-4. Prefetch → ¿hay gaps o todo es de hoy?
-
-Ninguna señal sola prueba trampa — el debloat legítimo existe. Pero **la combinación** (servicio reiniciado hace minutos + log joven + prefetch fresco) es muy difícil de explicar sin malicia. Un SS que de verdad quiera cachar tiene que mirar eso, no una tabla de `Get-Service`.
+Veredicto final: el antifake es cosmético. Sirve para que el staff parezca que revisa y para cachar al jugador que deja su `cheat.exe` abierto en la bandeja. Contra alguien que sabe lo que hace, `tasklist /fo table` es decoración. La versión que de verdad complica mira módulos, líneas de comando, rutas, firmas e historial. Todo eso está en `detect.ps1`.
 
 ---
 
-## Contacto
+## ![](https://app.devin.ai/attachments/14fb60f1-2bfe-4513-80df-74a09b75926a/person-24.svg) Contacto
 
 [![Discord Presence](https://lanyard.cnrad.dev/api/1038423018139037738)](https://discord.com/users/1038423018139037738)
 
 [![Discord](https://img.shields.io/badge/Discord-jujuda3-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.com/users/1038423018139037738)
-
-<!-- Si la tarjeta no muestra tu estado en vivo, únete al server de Lanyard: discord.gg/lanyard -->
