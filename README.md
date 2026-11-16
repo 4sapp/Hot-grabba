@@ -24,6 +24,12 @@ Bypass probado: detener los servicios, borrar prefetch y artefactos, y restaurar
 
 Fix: eventos 7036/7040, hora de arranque del proceso del servicio vs encendido del PC, continuidad de logs y prefetch. Incluye `detect.ps1` y `bypass.ps1`.
 
+### [Voyage.ac descompilado](voyage-ac/)
+
+Análisis completo del scanner comercial de SS (Nuitka, Python compilado): qué hay dentro, cómo se comporta en vivo y sus 46 checks de detección.
+
+Resultado: todos los bypasses de los dos reportes anteriores mueren aquí — lee historial (BAM, USN, ShimCache), detecta la propia limpieza y cubre LOLBins, .NET y exes renombrados. Sus gaps reales: sin admin queda a medias, marca algunas PCs limpias con flags low y decide un humano.
+
 ---
 
-Ambos métodos cometen el mismo error: miran el estado presente y no el historial. Un "Running" no prueba que nunca se detuvo, y una lista de procesos limpia no prueba que no hay código inyectado.
+Los dos primeros métodos cometen el mismo error: miran el estado presente y no el historial. Voyage.ac es el ejemplo de cómo se hace bien — por eso los trucos baratos ya no sirven.

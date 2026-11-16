@@ -1,0 +1,358 @@
+{
+  "version": "1.0 (Beta)",
+  "verdict": {
+    "cls": "warn",
+    "title": "Nothing found, but the scan was limited",
+    "text": "The scanner ran without administrator rights, so BAM, Prefetch, AmCache and USN could not be read. Run it again as admin."
+  },
+  "system": {
+    "host": "devinbox",
+    "os": "Windows-2022Server-10.0.20348-SP0",
+    "user": "",
+    "admin": false,
+    "boot": "2026-11-16 04:23:10",
+    "installed": "2026-11-04 00:12:40",
+    "scanned": "2026-11-16 05:02:32"
+  },
+  "notes": [
+    "BAM/DAM: no readable entries (needs admin, or an old Windows version).",
+    "Prefetch: folder unreadable (needs admin) or missing.",
+    "Defender MPLog: folder missing or unreadable (needs admin).",
+    "PcaSvc: the service is not running, so its memory was not read.",
+    "PCA text files are not present (Windows 10, or Windows 11 before 22H2).",
+    "USN Journal: needs admin.",
+    "Memory: without admin, some processes (csrss, svchost) could not be read."
+  ],
+  "started": "2026-11-16 05:02:32",
+  "finished": "2026-11-16 05:02:41",
+  "duration": 8,
+  "cheats": [],
+  "tamper": [
+    {
+      "kind": "tamper",
+      "key": "stale_letters",
+      "title": "Drive letters were used by volumes that are gone: C:, E:, F:",
+      "score": "low",
+      "reason": "Normal after unplugging USB drives. Compare with the BAM and memory results for programs that ran from them.",
+      "source": "HKLM\\SYSTEM\\MountedDevices",
+      "details": {},
+      "evidence": [],
+      "files": [],
+      "category": "",
+      "tier": "",
+      "summary": "Normal after unplugging USB drives. Compare with the BAM and memory results for programs that ran from them.",
+      "signal": false,
+      "family": ""
+    },
+    {
+      "kind": "tamper",
+      "key": "sig_tablet",
+      "title": "TabletInputService is disabled",
+      "score": "low",
+      "reason": "Disabled by some tweak guides and by people hiding typed commands. Weak on its own.",
+      "source": "HKLM\\...\\TabletInputService",
+      "details": {},
+      "evidence": [],
+      "files": [],
+      "category": "",
+      "tier": "",
+      "summary": "Disabled by some tweak guides and by people hiding typed commands. Weak on its own.",
+      "signal": true,
+      "family": "tablet"
+    },
+    {
+      "kind": "tamper",
+      "key": "sig_recentempty",
+      "title": "RecentDocs registry history is empty",
+      "score": "low",
+      "reason": "A PC in use normally has entries. Can also come from a cleaner app.",
+      "source": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\RecentDocs",
+      "details": {},
+      "evidence": [],
+      "files": [],
+      "category": "",
+      "tier": "",
+      "summary": "A PC in use normally has entries. Can also come from a cleaner app.",
+      "signal": true,
+      "family": "recent"
+    },
+    {
+      "kind": "tamper",
+      "key": "sig_runmru",
+      "title": "The Run dialog history is empty",
+      "score": "low",
+      "reason": "Weak on its own: many people never use Win+R.",
+      "source": "HKCU\\...\\RunMRU",
+      "details": {},
+      "evidence": [],
+      "files": [],
+      "category": "",
+      "tier": "",
+      "summary": "Weak on its own: many people never use Win+R.",
+      "signal": true,
+      "family": "recent"
+    }
+  ],
+  "info": [
+    {
+      "kind": "info",
+      "key": "fresh_install",
+      "title": "Windows was installed 12 day(s) ago",
+      "score": "low",
+      "reason": "A recent reinstall wipes execution history. Normal on a new PC, worth asking about.",
+      "source": "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion",
+      "details": {},
+      "evidence": [],
+      "files": [],
+      "category": "",
+      "tier": "",
+      "summary": "A recent reinstall wipes execution history. Normal on a new PC, worth asking about.",
+      "signal": false,
+      "family": ""
+    }
+  ],
+  "services": [
+    {
+      "name": "EventLog",
+      "desc": "Windows Event Log",
+      "severity": "high",
+      "state": "-",
+      "start": "-",
+      "result": "na",
+      "note": "Could not query services."
+    },
+    {
+      "name": "PcaSvc",
+      "desc": "Program Compatibility Assistant",
+      "severity": "high",
+      "state": "-",
+      "start": "-",
+      "result": "na",
+      "note": "Could not query services."
+    },
+    {
+      "name": "DPS",
+      "desc": "Diagnostic Policy Service",
+      "severity": "high",
+      "state": "-",
+      "start": "-",
+      "result": "na",
+      "note": "Could not query services."
+    },
+    {
+      "name": "DiagTrack",
+      "desc": "Connected User Experiences and Telemetry",
+      "severity": "low",
+      "state": "-",
+      "start": "-",
+      "result": "na",
+      "note": "Could not query services."
+    },
+    {
+      "name": "SysMain",
+      "desc": "SysMain (Superfetch)",
+      "severity": "low",
+      "state": "-",
+      "start": "-",
+      "result": "na",
+      "note": "Could not query services."
+    }
+  ],
+  "timeline": [],
+  "pca_view": [],
+  "step_times": [
+    {
+      "step": "System info",
+      "seconds": 0.1
+    },
+    {
+      "step": "Event logs",
+      "seconds": 0.1
+    },
+    {
+      "step": "Services",
+      "seconds": 0.0
+    },
+    {
+      "step": "BAM/DAM",
+      "seconds": 0.0
+    },
+    {
+      "step": "UserAssist",
+      "seconds": 0.0
+    },
+    {
+      "step": "Prefetch",
+      "seconds": 0.0
+    },
+    {
+      "step": "ShimCache",
+      "seconds": 0.0
+    },
+    {
+      "step": "AmCache",
+      "seconds": 0.0
+    },
+    {
+      "step": "Defender MPLog",
+      "seconds": 0.0
+    },
+    {
+      "step": "PcaSvc memory",
+      "seconds": 0.0
+    },
+    {
+      "step": "PCA text files",
+      "seconds": 0.0
+    },
+    {
+      "step": "Registry traces",
+      "seconds": 0.0
+    },
+    {
+      "step": "Running processes",
+      "seconds": 0.0
+    },
+    {
+      "step": "Files and folders",
+      "seconds": 0.0
+    },
+    {
+      "step": "Recycle Bin",
+      "seconds": 0.0
+    },
+    {
+      "step": "USN Journal",
+      "seconds": 0.0
+    },
+    {
+      "step": "Process memory",
+      "seconds": 0.0
+    },
+    {
+      "step": "Prefetch health",
+      "seconds": 0.0
+    },
+    {
+      "step": "Debugger hijacks",
+      "seconds": 0.0
+    },
+    {
+      "step": "PowerShell traces",
+      "seconds": 0.0
+    },
+    {
+      "step": "Hosts and zones",
+      "seconds": 0.0
+    },
+    {
+      "step": "Defender",
+      "seconds": 0.0
+    },
+    {
+      "step": "Recent folders",
+      "seconds": 0.0
+    },
+    {
+      "step": "Suspicious files",
+      "seconds": 0.0
+    },
+    {
+      "step": "LOLBins",
+      "seconds": 0.0
+    },
+    {
+      "step": "Game modules",
+      "seconds": 0.0
+    },
+    {
+      "step": "Hidden windows",
+      "seconds": 0.0
+    },
+    {
+      "step": "Roblox flags",
+      "seconds": 0.0
+    },
+    {
+      "step": "Packet drivers",
+      "seconds": 0.0
+    },
+    {
+      "step": "PowerShell abuse",
+      "seconds": 0.0
+    },
+    {
+      "step": "Explorer stability",
+      "seconds": 0.0
+    },
+    {
+      "step": "Blocked certificates",
+      "seconds": 0.0
+    },
+    {
+      "step": "File permissions",
+      "seconds": 0.0
+    },
+    {
+      "step": "Ghost processes",
+      "seconds": 0.0
+    },
+    {
+      "step": "DLL hijacking",
+      "seconds": 0.0
+    },
+    {
+      "step": "Search tool exclusions",
+      "seconds": 0.0
+    },
+    {
+      "step": "Virtual disks",
+      "seconds": 0.0
+    },
+    {
+      "step": "Journal and shadows",
+      "seconds": 0.0
+    },
+    {
+      "step": "Defender history",
+      "seconds": 0.0
+    },
+    {
+      "step": "MPLog health",
+      "seconds": 0.0
+    },
+    {
+      "step": "Volumes and USB",
+      "seconds": 0.0
+    },
+    {
+      "step": "Clock changes",
+      "seconds": 0.0
+    },
+    {
+      "step": "Kernel drivers",
+      "seconds": 0.0
+    },
+    {
+      "step": "DNS cache",
+      "seconds": 0.0
+    },
+    {
+      "step": "Unloaded modules",
+      "seconds": 0.0
+    },
+    {
+      "step": "Weak signals",
+      "seconds": 0.0
+    }
+  ],
+  "counts": {
+    "records": 256,
+    "cheat_high": 0,
+    "cheat_medium": 0,
+    "tamper_high": 0,
+    "tamper_medium": 0,
+    "low": 5
+  },
+  "report_sha256": "b9570dbe2f7a38a899930d6c848f69d4828bc13f41371772ff435f9e53909b3d"
+}
